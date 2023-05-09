@@ -1,0 +1,50 @@
+name: Build Docker Image and Push
+
+on:
+  repository_dispatch:
+    tyoes: [build]
+  workflow_dispatch:
+permissions:
+  packages: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      MEMOS_VERSION: ${{ github.event.client_payload.memos_version || 'latest' }}
+    steps:
+      - uses: actions/checkout@v3
+      - name: Show Version
+        run: |
+          echo "Build on memos:$MEMOS_VERSION"
+      - name: Log in to the Container registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v2
+        with:
+          install: true
+          version: v0.9.1
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: |
+            ghcr.io/ImSingee/memos-on-fly
+          tags: |
+            type=raw,value=latest
+            type=raw,value=${{ env.MEMOS_VERSION }}
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          build-args: |
+            MEMOS_VERSION=${{ env.MEMOS_VERSION }}
+          platforms: linux/amd64
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          push: true
+  
