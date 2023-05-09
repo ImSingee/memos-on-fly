@@ -1,0 +1,25 @@
+# fly.toml app configuration file generated for small-sound-9812 on 2023-05-09T21:59:49+08:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = "xxx-memos"
+primary_region = "hkg"
+
+[env]
+  LITESTREAM_REPLICA_BUCKET = "xxx-memos-backup"
+  LITESTREAM_REPLICA_ENDPOINT = "s3.us-west-000.backblazeb2.com"
+  LITESTREAM_REPLICA_PATH = "memos_prod.db"
+
+[build]
+  image = "ghcr.io/imsingee/memos-on-fly:latest"
+
+[mounts]
+  source="memos_data"
+  destination="/var/opt/memos"
+
+[http_service]
+  internal_port = 5230
+  force_https = true
+  auto_stop_machines = true
+  auto_start_machines = true
